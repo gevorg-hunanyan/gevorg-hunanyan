@@ -6,7 +6,7 @@ import urllib.request
 
 README_PATH = "README.md"
 
-LC_USERNAME = os.environ["Gevorg-Hunanyan-999"]
+LC_USERNAME = os.environ["LC_USERNAME"]
 
 # Optional (only needed if LeetCode blocks anonymous requests for you):
 LC_SESSION = os.environ.get("LC_SESSION", "").strip()
