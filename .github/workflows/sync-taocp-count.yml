@@ -29,7 +29,7 @@ jobs:
           profile_path = pathlib.Path("README.md")
           profile = profile_path.read_text(encoding="utf-8")
 
-          m = re.search(r'(?i)there\s+are\s+currently\s+(\d+)\s+solved\s+exercises\s+in\s+the\s+repository', taocp)
+          m = re.search(r'<!--\s*SOLVED_COUNT\s*-->\s*(\d+)\s*<!--\s*/SOLVED_COUNT\s*-->', taocp)
           if not m:
             raise SystemExit("Couldn't find the solved count in TAOCP README. Adjust the regex.")
           count = m.group(1)
