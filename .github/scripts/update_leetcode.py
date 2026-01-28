@@ -77,7 +77,12 @@ def update_readme(new_count: int) -> bool:
     if old == str(new_count):
         return False
 
-    updated = re.sub(pattern, rf"\1{new_count}\3", text, flags=re.DOTALL)
+    updated = re.sub(
+        pattern,
+        r"\g<1>" + str(new_count) + r"\g<3>",
+        text,
+        flags=re.DOTALL,
+    )
 
     with open(README_PATH, "w", encoding="utf-8") as f:
         f.write(updated)
