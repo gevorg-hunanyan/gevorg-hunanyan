@@ -1,0 +1,66 @@
+name: Sync TAOCP solved count
+
+on:
+  repository_dispatch:
+    types: [taocp_updated]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch TAOCP README
+        run: |
+          curl -sS \
+            "https://raw.githubusercontent.com/gevorg-hunanyan/taocp-solutions/main/README.md" \
+            -o taocp_readme.md
+
+      - name: Extract count + update profile README
+        run: |
+          python - <<'PY'
+          import re, pathlib
+
+          taocp = pathlib.Path("taocp_readme.md").read_text(encoding="utf-8")
+          profile_path = pathlib.Path("README.md")
+          profile = profile_path.read_text(encoding="utf-8")
+
+          m = re.search(r'(?i)there\s+are\s+currently\s+(\d+)\s+solved\s+exercises\s+in\s+the\s+repository', taocp)
+          if not m:
+            raise SystemExit("Couldn't find the solved count in TAOCP README. Adjust the regex.")
+          count = m.group(1)
+
+          start = "<!-- TAOCP_COUNT_START -->"
+          end   = "<!-- TAOCP_COUNT_END -->"
+          if start not in profile or end not in profile:
+            raise SystemExit("Missing TAOCP_COUNT_START/TAOCP_COUNT_END markers in profile README.")
+
+          new_block = f"{start}\nTAOCP solved: **{count}**\n{end}"
+          new_block = f"{start}**{count}**{end}"
+
+          updated = re.sub(
+              re.escape(start) + r".*?" + re.escape(end),
+              new_block,
+              profile,
+              flags=re.DOTALL
+          )
+
+          profile_path.write_text(updated, encoding="utf-8")
+          print("Updated TAOCP solved count:", count)
+          PY
+
+      - name: Commit & push if changed
+        run: |
+          if git diff --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore: sync TAOCP solved count"
+          git push
