@@ -2,7 +2,7 @@
 
 <img
   align="right"
-  src="https://github-readme-stats-eight-theta.vercel.app/api/top-langs/?username=gevorg-hunanyan&layout=compact&theme=radical&count_private=true"
+  src="https://github-readme-stats-eight-theta.vercel.app/api/top-langs/?username=gevorg-hunanyan&layout=compact&theme=radical&count_private=true&cacheSeconds=1800"
   alt="gevorg-hunanyan"
 />
 
