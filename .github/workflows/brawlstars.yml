@@ -18,26 +18,22 @@ jobs:
         env:
           TAG: ${{ secrets.BRAWL_TAG }}
         run: |
-          set -e
+          set -euo pipefail
 
-          URL="https://api.brawlapi.com/v1/player/%23$TAG"
-          DATA=$(curl -s "$URL")
+          URL="https://api.brawlapi.com/v1/player?tag=%23$TAG"
+          DATA="$(curl -fsSL -H "Accept: application/json" "$URL")"
 
-          echo "===== RAW API RESPONSE ====="
-          echo "$DATA"
-          echo "============================"
+          # if it's not JSON, fail immediately (so you see the response in logs)
+          echo "$DATA" | jq . >/dev/null
 
-          exit 1
+          TROPHIES="$(echo "$DATA" | jq -r '.trophies // empty')"
+          RANK_CURRENT="$(echo "$DATA" | jq -r '.ranked.current // .rankedCurrent // "Unranked"')"
+          RANK_MAX="$(echo "$DATA" | jq -r '.ranked.highest // .rankedHighest // "Unranked"')"
 
-          TROPHIES=$(echo "$DATA" | jq '.trophies')
-
-          # These are already strings like "Mythic III"
-          RANK_CURRENT=$(echo "$DATA" | jq -r '.ranked.current')
-          RANK_MAX=$(echo "$DATA" | jq -r '.ranked.highest')
-
-          sed -i "s|<!-- TROPHIES -->.*<!-- /TROPHIES -->|<!-- TROPHIES -->$TROPHIES<!-- /TROPHIES -->|" README.md
-          sed -i "s|<!-- RANK_CURRENT -->.*<!-- /RANK_CURRENT -->|<!-- RANK_CURRENT -->$RANK_CURRENT<!-- /RANK_CURRENT -->|" README.md
-          sed -i "s|<!-- RANK_MAX -->.*<!-- /RANK_MAX -->|<!-- RANK_MAX -->$RANK_MAX<!-- /RANK_MAX -->|" README.md
+          # replace the markers in README
+          sed -i "s|<!-- TROPHIES -->.*<!-- /TROPHIES -->|<!-- TROPHIES -->$TROPHIES<!-- /TROPHIES -->|g" README.md
+          sed -i "s|<!-- RANK_CURRENT -->.*<!-- /RANK_CURRENT -->|<!-- RANK_CURRENT -->$RANK_CURRENT<!-- /RANK_CURRENT -->|g" README.md
+          sed -i "s|<!-- RANK_MAX -->.*<!-- /RANK_MAX -->|<!-- RANK_MAX -->$RANK_MAX<!-- /RANK_MAX -->|g" README.md
 
       - name: Commit changes
         run: |
