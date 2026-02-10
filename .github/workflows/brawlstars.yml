@@ -18,7 +18,7 @@ jobs:
         env:
           TAG: ${{ secrets.BRAWL_TAG }}
         run: |
-          DATA=$(curl -s "https://brawlapi.com/api/player?tag=%23$TAG")
+          DATA=$(curl -s "https://api.brawlapi.com/v1/player/%23TAG")
 
           TROPHIES=$(echo "$DATA" | jq '.trophies')
 
