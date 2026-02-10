@@ -18,11 +18,17 @@ jobs:
         env:
           TAG: ${{ secrets.BRAWL_TAG }}
         run: |
-          DATA=$(curl -s "https://api.brawlapi.com/v1/player/%23TAG")
+          set -e
+
+          URL="https://api.brawlapi.com/v1/player/%23$TAG"
+          DATA=$(curl -s -H "Accept: application/json" "$URL")
+
+          # Safety check: make sure it's JSON
+          echo "$DATA" | jq . >/dev/null
 
           TROPHIES=$(echo "$DATA" | jq '.trophies')
 
-          # These two already come as names like "Mythic III"
+          # These are already strings like "Mythic III"
           RANK_CURRENT=$(echo "$DATA" | jq -r '.ranked.current')
           RANK_MAX=$(echo "$DATA" | jq -r '.ranked.highest')
 
