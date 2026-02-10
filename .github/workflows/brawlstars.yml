@@ -21,10 +21,13 @@ jobs:
           set -e
 
           URL="https://api.brawlapi.com/v1/player/%23$TAG"
-          DATA=$(curl -s -H "Accept: application/json" "$URL")
+          DATA=$(curl -s "$URL")
 
-          # Safety check: make sure it's JSON
-          echo "$DATA" | jq . >/dev/null
+          echo "===== RAW API RESPONSE ====="
+          echo "$DATA"
+          echo "============================"
+
+          exit 1
 
           TROPHIES=$(echo "$DATA" | jq '.trophies')
 
