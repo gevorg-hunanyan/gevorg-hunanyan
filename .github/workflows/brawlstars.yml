@@ -2,7 +2,7 @@ name: Update Brawl Stars stats
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "15 */12 * * *"
   workflow_dispatch:
 
 permissions:
@@ -14,21 +14,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch stats and update README
+      - name: Update README
         env:
           TAG: ${{ secrets.BRAWL_TAG }}
         run: |
-          set -e
-
           DATA=$(curl -s "https://brawlapi.com/api/player?tag=%23$TAG")
 
           TROPHIES=$(echo "$DATA" | jq '.trophies')
-          RANKED_CURRENT=$(echo "$DATA" | jq '.ranked?.current // .soloRanked?.current // 0')
-          RANKED_MAX=$(echo "$DATA" | jq '.ranked?.highest // .soloRanked?.highest // 0')
+
+          # These two already come as names like "Mythic III"
+          RANK_CURRENT=$(echo "$DATA" | jq -r '.ranked.current')
+          RANK_MAX=$(echo "$DATA" | jq -r '.ranked.highest')
 
           sed -i "s|<!-- TROPHIES -->.*<!-- /TROPHIES -->|<!-- TROPHIES -->$TROPHIES<!-- /TROPHIES -->|" README.md
-          sed -i "s|<!-- RANKED_CURRENT -->.*<!-- /RANKED_CURRENT -->|<!-- RANKED_CURRENT -->$RANKED_CURRENT<!-- /RANKED_CURRENT -->|" README.md
-          sed -i "s|<!-- RANKED_MAX -->.*<!-- /RANKED_MAX -->|<!-- RANKED_MAX -->$RANKED_MAX<!-- /RANKED_MAX -->|" README.md
+          sed -i "s|<!-- RANK_CURRENT -->.*<!-- /RANK_CURRENT -->|<!-- RANK_CURRENT -->$RANK_CURRENT<!-- /RANK_CURRENT -->|" README.md
+          sed -i "s|<!-- RANK_MAX -->.*<!-- /RANK_MAX -->|<!-- RANK_MAX -->$RANK_MAX<!-- /RANK_MAX -->|" README.md
 
       - name: Commit changes
         run: |
