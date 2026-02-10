@@ -1,0 +1,39 @@
+name: Update Brawl Stars stats
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch stats and update README
+        env:
+          TAG: ${{ secrets.BRAWL_TAG }}
+        run: |
+          set -e
+
+          DATA=$(curl -s "https://brawlapi.com/api/player?tag=%23$TAG")
+
+          TROPHIES=$(echo "$DATA" | jq '.trophies')
+          RANKED_CURRENT=$(echo "$DATA" | jq '.ranked?.current // .soloRanked?.current // 0')
+          RANKED_MAX=$(echo "$DATA" | jq '.ranked?.highest // .soloRanked?.highest // 0')
+
+          sed -i "s|<!-- TROPHIES -->.*<!-- /TROPHIES -->|<!-- TROPHIES -->$TROPHIES<!-- /TROPHIES -->|" README.md
+          sed -i "s|<!-- RANKED_CURRENT -->.*<!-- /RANKED_CURRENT -->|<!-- RANKED_CURRENT -->$RANKED_CURRENT<!-- /RANKED_CURRENT -->|" README.md
+          sed -i "s|<!-- RANKED_MAX -->.*<!-- /RANKED_MAX -->|<!-- RANKED_MAX -->$RANKED_MAX<!-- /RANKED_MAX -->|" README.md
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "Update Brawl Stars stats"
+          git push
