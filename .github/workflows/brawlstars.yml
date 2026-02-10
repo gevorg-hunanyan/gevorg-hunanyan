@@ -20,25 +20,32 @@ jobs:
         run: |
           set -euo pipefail
 
-          URL="https://api.brawlapi.com/v1/player?tag=%23$TAG"
+          # StarList (the "old BrawlAPI" base URL)
+          URL="https://api.starlist.pro/v1/player?tag=%23$TAG"
           DATA="$(curl -fsSL -H "Accept: application/json" "$URL")"
 
-          # if it's not JSON, fail immediately (so you see the response in logs)
+          # Must be valid JSON
           echo "$DATA" | jq . >/dev/null
 
-          TROPHIES="$(echo "$DATA" | jq -r '.trophies // empty')"
-          RANK_CURRENT="$(echo "$DATA" | jq -r '.ranked.current // .rankedCurrent // "Unranked"')"
-          RANK_MAX="$(echo "$DATA" | jq -r '.ranked.highest // .rankedHighest // "Unranked"')"
+          TROPHIES="$(echo "$DATA" | jq -r '.trophies // "N/A"')"
 
-          # replace the markers in README
+          # Ranked fields vary by API/version. These cover common shapes.
+          RANK_CURRENT="$(echo "$DATA" | jq -r '
+            .ranked.current //
+            .rankedCurrent //
+            .soloRanked.current //
+            .powerPlayRank //
+            "N/A"
+          ')"
+
+          RANK_MAX="$(echo "$DATA" | jq -r '
+            .ranked.highest //
+            .rankedHighest //
+            .soloRanked.highest //
+            .highestPowerPlayRank //
+            "N/A"
+          ')"
+
           sed -i "s|<!-- TROPHIES -->.*<!-- /TROPHIES -->|<!-- TROPHIES -->$TROPHIES<!-- /TROPHIES -->|g" README.md
           sed -i "s|<!-- RANK_CURRENT -->.*<!-- /RANK_CURRENT -->|<!-- RANK_CURRENT -->$RANK_CURRENT<!-- /RANK_CURRENT -->|g" README.md
-          sed -i "s|<!-- RANK_MAX -->.*<!-- /RANK_MAX -->|<!-- RANK_MAX -->$RANK_MAX<!-- /RANK_MAX -->|g" README.md
-
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          git diff --cached --quiet || git commit -m "Update Brawl Stars stats"
-          git push
+          sed -i "s|<!-- RANK_MAX -->.*<!-- /RANK_MAX -->|<!-- RANK_MAX -->$RANK_MAX<!-- /RANK_MAX*_
